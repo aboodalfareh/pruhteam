@@ -22,11 +22,12 @@ const loadScript = (src) => {
 
 
 // --- Firebase Configuration ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' 
-    ? JSON.parse(__firebase_config) 
+// Reads the configuration from the environment variable set in Vercel.
+const firebaseConfig = process.env.REACT_APP_FIREBASE_CONFIG
+    ? JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG)
     : { apiKey: "DEMO_API_KEY", authDomain: "DEMO_AUTH_DOMAIN", projectId: "DEMO_PROJECT_ID" };
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pro-team-app';
+const appId = 'pro-team-app-prod'; // A fixed app ID for the deployed version.
 
 // --- Firebase Initialization ---
 const app = initializeApp(firebaseConfig);
