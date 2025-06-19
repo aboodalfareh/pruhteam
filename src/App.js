@@ -5,29 +5,12 @@ import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { LayoutDashboard, FileText, Users, Briefcase, Settings, PlusCircle, X, ChevronDown, Edit, Trash2, ArrowRight, Sun, Moon, LogOut, User, Lock, ClipboardCheck, Download } from 'lucide-react';
 
-// --- Helper to load external scripts ---
-const loadScript = (src) => {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      resolve();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Script load error for ${src}`));
-    document.head.appendChild(script);
-  });
-};
-
-
 // --- Firebase Configuration ---
-// Reads the configuration from the environment variable set in Vercel.
-const firebaseConfig = process.env.REACT_APP_FIREBASE_CONFIG
-    ? JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG)
+const firebaseConfig = typeof __firebase_config !== 'undefined' 
+    ? JSON.parse(__firebase_config) 
     : { apiKey: "DEMO_API_KEY", authDomain: "DEMO_AUTH_DOMAIN", projectId: "DEMO_PROJECT_ID" };
 
-const appId = 'pro-team-app-prod'; // A fixed app ID for the deployed version.
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pro-team-app';
 
 // --- Firebase Initialization ---
 const app = initializeApp(firebaseConfig);
@@ -52,11 +35,6 @@ export default function App() {
             setIsAuthReady(true);
         });
         
-        Promise.all([
-            loadScript("https://unpkg.com/docx@8.5.0/dist/docx.js"),
-            loadScript("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js")
-        ]).catch(error => console.error("Error loading scripts:", error));
-
         return () => unsubscribe();
     }, []);
 
@@ -895,6 +873,11 @@ const PaymentVouchers = ({ username }) => {
     }, [username]);
 
     const handleAdd = () => setIsModalOpen(true);
+    const handleDelete = async (id) => {
+       if (window.confirm('هل أنت متأكد من حذف هذا السند؟ لا يمكن التراجع عن هذه العملية.')) {
+         await deleteDoc(doc(db, `${dataPath}/vouchers`, id));
+       }
+    };
 
     const handleSave = async (voucherData) => {
         try {
@@ -932,35 +915,6 @@ const PaymentVouchers = ({ username }) => {
         }
     };
     
-    const generateVoucherDocx = (voucher) => {
-        if (!window.docx) {
-          console.error("Docx library not loaded!");
-          alert("مكتبة تصدير الملفات غير جاهزة, يرجى المحاولة مرة أخرى.");
-          return;
-        }
-        const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = window.docx;
-
-        const doc = new Document({
-            sections: [{
-                properties: { page: { margin: { top: 720, right: 720, bottom: 720, left: 720 } } },
-                children: [
-                    new Paragraph({ text: "الفريق المحترف", alignment: AlignmentType.CENTER, style: "header" }),
-                    new Paragraph({ text: "سند قبض", heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, spacing: { after: 200 } }),
-                    new Paragraph({ text: `رقم السند: VCH-${voucher.voucherNumber}`, alignment: AlignmentType.RIGHT }),
-                    new Paragraph({ text: `التاريخ: ${new Date(voucher.date).toLocaleDateString('ar-SA')}`, alignment: AlignmentType.RIGHT, spacing: { after: 400 } }),
-                    new Paragraph({ children: [ new TextRun({ text: "استلمنا من السيد/السادة: ", bold: true }), new TextRun(voucher.customerName) ], alignment: AlignmentType.RIGHT, spacing: { after: 200 } }),
-                    new Paragraph({ children: [ new TextRun({ text: "مبلغاً وقدره: ", bold: true }), new TextRun(`${Number(voucher.amount).toLocaleString()} ريال سعودي`) ], alignment: AlignmentType.RIGHT, spacing: { after: 200 } }),
-                    new Paragraph({ children: [ new TextRun({ text: "وذلك عن: ", bold: true }), new TextRun(`دفعة من فاتورة رقم INV-${voucher.invoiceNumber}`) ], alignment: AlignmentType.RIGHT, spacing: { after: 800 } }),
-                    new Paragraph({ children: [ new TextRun({ text: "المستلم: .........................", bold: true })], alignment: AlignmentType.LEFT }),
-                ],
-            }],
-        });
-
-        Packer.toBlob(doc).then(blob => {
-            window.saveAs(blob, `سند-قبض-${voucher.voucherNumber}.docx`);
-        });
-    };
-
     return (
        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
             <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-bold text-gray-800 dark:text-white">إدارة سندات القبض</h2><button onClick={handleAdd} className="flex items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors"><PlusCircle className="mr-2" size={20}/> سند قبض جديد</button></div>
@@ -978,7 +932,7 @@ const PaymentVouchers = ({ username }) => {
                                     <td className="px-4 py-3">ر.س {Number(voucher.amount).toLocaleString()}</td>
                                     <td className="px-4 py-3">{voucher.date}</td>
                                     <td className="px-4 py-3 flex items-center space-x-2 justify-end">
-                                        <button onClick={() => generateVoucherDocx(voucher)} className="p-2 text-green-600 hover:text-green-800"><Download size={18}/></button>
+                                         <button onClick={() => handleDelete(voucher.id)} className="p-2 text-red-600 hover:text-red-800"><Trash2 size={18}/></button>
                                     </td>
                                 </tr>
                             ))
