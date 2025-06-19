@@ -6,20 +6,30 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { LayoutDashboard, FileText, Users, Briefcase, Settings, PlusCircle, X, ChevronDown, Edit, Trash2, ArrowRight, Sun, Moon, LogOut, User, Lock, ClipboardCheck } from 'lucide-react';
 
 // --- Firebase Configuration ---
-// This function safely reads the configuration.
+// This function safely reads the configuration from either the Vercel environment or the local/Canvas environment.
 const getFirebaseConfig = () => {
-    try {
-        const config = process.env.REACT_APP_FIREBASE_CONFIG;
-        if (config) {
-            return JSON.parse(config);
+    // For Vercel/production environment
+    if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_FIREBASE_CONFIG) {
+        try {
+            return JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG);
+        } catch (e) {
+            console.error("Failed to parse REACT_APP_FIREBASE_CONFIG", e);
         }
-        console.warn("Firebase config environment variable not set. Using demo credentials.");
-        return { apiKey: "DEMO_API_KEY", authDomain: "DEMO_AUTH_DOMAIN", projectId: "DEMO_PROJECT_ID" };
-    } catch (error) {
-        console.error("Failed to parse Firebase config:", error);
-        return { apiKey: "DEMO_API_KEY", authDomain: "DEMO_AUTH_DOMAIN", projectId: "DEMO_PROJECT_ID" };
     }
-}
+    // For Canvas/development environment
+    if (typeof __firebase_config !== 'undefined') {
+        try {
+            return JSON.parse(__firebase_config);
+        } catch(e) {
+            console.error("Failed to parse __firebase_config", e);
+        }
+    }
+
+    // Fallback if neither is found
+    console.warn("Firebase config not found. Using demo credentials.");
+    return { apiKey: "DEMO_API_KEY", authDomain: "DEMO_AUTH_DOMAIN", projectId: "DEMO_PROJECT_ID" };
+};
+
 
 const firebaseConfig = getFirebaseConfig();
 const appId = 'pro-team-app-prod'; // A fixed app ID for the deployed version.
