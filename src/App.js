@@ -8,6 +8,14 @@ import { LayoutDashboard, FileText, Users, Briefcase, Settings, PlusCircle, X, C
 // --- Firebase Configuration ---
 // This function safely reads the configuration.
 const getFirebaseConfig = () => {
+    // For Vercel/production environment. create-react-app replaces this with the string value at build time.
+    if (process.env.REACT_APP_FIREBASE_CONFIG) {
+        try {
+            return JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG);
+        } catch (e) {
+            console.error("Failed to parse REACT_APP_FIREBASE_CONFIG", e);
+        }
+    }
     // For Canvas/development environment
     // eslint-disable-next-line
     if (typeof __firebase_config !== 'undefined') {
@@ -18,18 +26,7 @@ const getFirebaseConfig = () => {
             console.error("Failed to parse __firebase_config", e);
         }
     }
-    
-    // For Vercel/production environment
-    // Note: Vercel injects environment variables during its build process.
-    // The 'process' object is only available in that Node.js build environment.
-    try {
-        if (process.env.REACT_APP_FIREBASE_CONFIG) {
-            return JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG);
-        }
-    } catch (e) {
-        console.error("Failed to parse REACT_APP_FIREBASE_CONFIG", e);
-    }
-    
+
     // Fallback if no configuration is found
     console.warn("Firebase config not found. Using demo credentials.");
     return { apiKey: "DEMO_API_KEY", authDomain: "DEMO_AUTH_DOMAIN", projectId: "DEMO_PROJECT_ID" };
