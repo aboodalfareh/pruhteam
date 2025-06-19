@@ -3,14 +3,26 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, query, where, getDocs, serverTimestamp, runTransaction } from 'firebase/firestore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { LayoutDashboard, FileText, Users, Briefcase, Settings, PlusCircle, X, ChevronDown, Edit, Trash2, ArrowRight, Sun, Moon, LogOut, User, Lock, ClipboardCheck, Download } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Briefcase, Settings, PlusCircle, X, ChevronDown, Edit, Trash2, ArrowRight, Sun, Moon, LogOut, User, Lock, ClipboardCheck } from 'lucide-react';
 
 // --- Firebase Configuration ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' 
-    ? JSON.parse(__firebase_config) 
-    : { apiKey: "DEMO_API_KEY", authDomain: "DEMO_AUTH_DOMAIN", projectId: "DEMO_PROJECT_ID" };
+// This function safely reads the configuration.
+const getFirebaseConfig = () => {
+    try {
+        const config = process.env.REACT_APP_FIREBASE_CONFIG;
+        if (config) {
+            return JSON.parse(config);
+        }
+        console.warn("Firebase config environment variable not set. Using demo credentials.");
+        return { apiKey: "DEMO_API_KEY", authDomain: "DEMO_AUTH_DOMAIN", projectId: "DEMO_PROJECT_ID" };
+    } catch (error) {
+        console.error("Failed to parse Firebase config:", error);
+        return { apiKey: "DEMO_API_KEY", authDomain: "DEMO_AUTH_DOMAIN", projectId: "DEMO_PROJECT_ID" };
+    }
+}
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pro-team-app';
+const firebaseConfig = getFirebaseConfig();
+const appId = 'pro-team-app-prod'; // A fixed app ID for the deployed version.
 
 // --- Firebase Initialization ---
 const app = initializeApp(firebaseConfig);
