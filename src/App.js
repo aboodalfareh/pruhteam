@@ -8,27 +8,28 @@ import { LayoutDashboard, FileText, Users, Briefcase, Settings, PlusCircle, X, C
 // --- Firebase Configuration ---
 // This function safely reads the configuration.
 const getFirebaseConfig = () => {
+    // For Canvas/development environment
+    // eslint-disable-next-line
+    if (typeof __firebase_config !== 'undefined') {
+        try {
+            // eslint-disable-next-line
+            return JSON.parse(__firebase_config);
+        } catch(e) {
+            console.error("Failed to parse __firebase_config", e);
+        }
+    }
+    
+    // For Vercel/production environment
+    // Note: Vercel injects environment variables during its build process.
+    // The 'process' object is only available in that Node.js build environment.
     try {
-        // This is for Vercel/production environment. Vercel replaces this during build.
-        const config = process.env.REACT_APP_FIREBASE_CONFIG;
-        if (config) {
-            return JSON.parse(config);
+        if (process.env.REACT_APP_FIREBASE_CONFIG) {
+            return JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG);
         }
     } catch (e) {
         console.error("Failed to parse REACT_APP_FIREBASE_CONFIG", e);
     }
-
-    try {
-         // This is for the Canvas/development environment.
-         // eslint-disable-next-line
-        if (typeof __firebase_config !== 'undefined') {
-             // eslint-disable-next-line
-            return JSON.parse(__firebase_config);
-        }
-    } catch(e) {
-        console.error("Failed to parse __firebase_config", e);
-    }
-
+    
     // Fallback if no configuration is found
     console.warn("Firebase config not found. Using demo credentials.");
     return { apiKey: "DEMO_API_KEY", authDomain: "DEMO_AUTH_DOMAIN", projectId: "DEMO_PROJECT_ID" };
