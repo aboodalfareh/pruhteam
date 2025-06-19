@@ -9,8 +9,7 @@ import { LayoutDashboard, FileText, Users, Briefcase, Settings, PlusCircle, X, C
 // This function safely reads the configuration from either the Vercel environment or the local/Canvas environment.
 const getFirebaseConfig = () => {
     // For Vercel/production environment
-    // Note: process.env is handled by create-react-app build process.
-    if (process.env.REACT_APP_FIREBASE_CONFIG) {
+    if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_FIREBASE_CONFIG) {
         try {
             return JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG);
         } catch (e) {
