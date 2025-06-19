@@ -6,9 +6,17 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { LayoutDashboard, FileText, Users, Briefcase, Settings, PlusCircle, X, ChevronDown, Edit, Trash2, ArrowRight, Sun, Moon, LogOut, User, Lock, ClipboardCheck } from 'lucide-react';
 
 // --- Firebase Configuration ---
-// This function safely reads the configuration.
+// This function safely reads the configuration from either the Vercel environment or the local/Canvas environment.
 const getFirebaseConfig = () => {
-    // For Canvas/development environment first
+    // For Vercel/production environment. create-react-app replaces this with the string value at build time.
+    if (process.env.REACT_APP_FIREBASE_CONFIG) {
+        try {
+            return JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG);
+        } catch (e) {
+            console.error("Failed to parse REACT_APP_FIREBASE_CONFIG", e);
+        }
+    }
+    // For Canvas/development environment
     // eslint-disable-next-line
     if (typeof __firebase_config !== 'undefined') {
         try {
@@ -16,16 +24,6 @@ const getFirebaseConfig = () => {
             return JSON.parse(__firebase_config);
         } catch(e) {
             console.error("Failed to parse __firebase_config", e);
-        }
-    }
-    
-    // For Vercel/production environment. create-react-app replaces this with the string value at build time.
-    const vercelConfig = process.env.REACT_APP_FIREBASE_CONFIG;
-    if (vercelConfig) {
-        try {
-            return JSON.parse(vercelConfig);
-        } catch (e) {
-            console.error("Failed to parse REACT_APP_FIREBASE_CONFIG", e);
         }
     }
 
@@ -39,7 +37,15 @@ const firebaseConfig = getFirebaseConfig();
 const appId = 'pro-team-app-prod'; // A fixed app ID for the deployed version.
 
 // --- Firebase Initialization ---
-const app = initializeApp(firebaseConfig);
+let app;
+try {
+    app = initializeApp(firebaseConfig);
+} catch (error) {
+    console.error("Firebase initialization failed:", error);
+    // Use a dummy object if initialization fails to prevent further crashes
+    app = {}; 
+}
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 
