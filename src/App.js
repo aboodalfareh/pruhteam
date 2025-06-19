@@ -1,5 +1,4 @@
-/* global __firebase_config */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, query, where, getDocs, serverTimestamp, runTransaction } from 'firebase/firestore';
@@ -9,20 +8,24 @@ import { LayoutDashboard, FileText, Users, Briefcase, Settings, PlusCircle, X, C
 // --- Firebase Configuration ---
 // This function safely reads the configuration.
 const getFirebaseConfig = () => {
-    // For Vercel/production environment. create-react-app replaces this with the string value at build time.
-    if (process.env.REACT_APP_FIREBASE_CONFIG) {
-        try {
-            return JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG);
-        } catch (e) {
-            console.error("Failed to parse REACT_APP_FIREBASE_CONFIG", e);
-        }
-    }
-    // For Canvas/development environment
+    // For Canvas/development environment first
+    // eslint-disable-next-line
     if (typeof __firebase_config !== 'undefined') {
         try {
+             // eslint-disable-next-line
             return JSON.parse(__firebase_config);
         } catch(e) {
             console.error("Failed to parse __firebase_config", e);
+        }
+    }
+    
+    // For Vercel/production environment. create-react-app replaces this with the string value at build time.
+    const vercelConfig = process.env.REACT_APP_FIREBASE_CONFIG;
+    if (vercelConfig) {
+        try {
+            return JSON.parse(vercelConfig);
+        } catch (e) {
+            console.error("Failed to parse REACT_APP_FIREBASE_CONFIG", e);
         }
     }
 
